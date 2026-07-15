@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/paulmach/orb"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 func TestNewFeature(t *testing.T) {
@@ -60,65 +59,6 @@ func TestFeatureOf_json(t *testing.T) {
 	err = json.Unmarshal(blob, &f2)
 	if err != nil {
 		t.Fatalf("error unmarshalling from json: %v", err)
-	}
-
-	if f2.Type != "Feature" {
-		t.Errorf("incorrect feature: %v != Feature", f2.Type)
-	}
-
-	if f2.Properties.Int != 1 {
-		t.Errorf("incorrect int property: %v != 1", f2.Properties.Int)
-	}
-
-	if f2.Properties.String != "foo" {
-		t.Errorf("incorrect string property: %v != foo", f2.Properties.String)
-	}
-}
-
-func TestFeatureT_bson(t *testing.T) {
-	type S struct {
-		Int    int    `bson:"int"`
-		String string `bson:"string"`
-	}
-
-	f := FeatureOf[S]{
-		Geometry: orb.Point{1, 2},
-		Properties: S{
-			Int:    1,
-			String: "foo",
-		},
-	}
-
-	blob, err := f.MarshalBSON()
-	if err != nil {
-		t.Fatalf("error marshalling to bson: %v", err)
-	}
-
-	var raw bson.M
-	dec := bson.NewDecoder(bson.NewDocumentReader(bytes.NewReader(blob)))
-	dec.DefaultDocumentM()
-	err = dec.Decode(&raw)
-	if err != nil {
-		t.Fatalf("error unmarshalling raw bson: %v", err)
-	}
-
-	properties, ok := raw["properties"].(bson.M)
-	if !ok {
-		t.Fatalf("properties should be a bson document, got %T", raw["properties"])
-	}
-
-	if properties["int"] != int32(1) {
-		t.Errorf("incorrect int property in bson: %v != 1", properties["int"])
-	}
-
-	if properties["string"] != "foo" {
-		t.Errorf("incorrect string property in bson: %v != foo", properties["string"])
-	}
-
-	var f2 FeatureOf[S]
-	err = bson.Unmarshal(blob, &f2)
-	if err != nil {
-		t.Fatalf("error unmarshalling from bson: %v", err)
 	}
 
 	if f2.Type != "Feature" {
@@ -189,30 +129,6 @@ func TestFeatureMarshal(t *testing.T) {
 		t.Errorf("json should set properties to null if there are none")
 	}
 	if !bytes.Contains(blob, []byte(`"type":"Feature"`)) {
-		t.Errorf("json should set properties to null if there are none")
-	}
-}
-
-func TestFeature_marshalValue(t *testing.T) {
-	f := NewFeature(orb.Point{1, 2})
-
-	// json
-	blob, err := json.Marshal(*f)
-	if err != nil {
-		t.Fatalf("should marshal to json just fine but got %v", err)
-	}
-
-	if !bytes.Contains(blob, []byte(`"properties":null`)) {
-		t.Errorf("json should set properties to null if there are none")
-	}
-
-	// bson
-	blob, err = bson.Marshal(*f)
-	if err != nil {
-		t.Fatalf("should marshal to bson just fine but got %v", err)
-	}
-
-	if !bytes.Contains(blob, append([]byte{byte(bson.TypeNull)}, []byte("properties")...)) {
 		t.Errorf("json should set properties to null if there are none")
 	}
 }
@@ -363,32 +279,6 @@ func TestFeatureMarshalJSON_extraMembers(t *testing.T) {
 	}
 }
 
-func TestUnmarshalBSON_missingGeometry(t *testing.T) {
-	t.Run("missing geometry", func(t *testing.T) {
-		f := NewFeature(nil)
-		f.Geometry = nil
-
-		data, err := bson.Marshal(f)
-		if err != nil {
-			t.Fatalf("marshal error: %v", err)
-		}
-
-		nf := &Feature{}
-		err = bson.Unmarshal(data, &nf)
-		if err != nil {
-			t.Fatalf("unmarshal error: %v", err)
-		}
-
-		if f.Geometry != nil {
-			t.Fatalf("geometry should be nil")
-		}
-
-		if f == nil {
-			t.Fatalf("feature should not be nil")
-		}
-	})
-}
-
 func TestUnmarshalFeature_BBox(t *testing.T) {
 	rawJSON := `
 	  { "type": "Feature",
@@ -482,34 +372,6 @@ func TestMarshalRing(t *testing.T) {
 	}
 }
 
-func TestFeature_MarshalBSON_extraMembers(t *testing.T) {
-	f := NewFeature(orb.Point{1, 2})
-
-	f.ExtraMembers = map[string]any{
-		"a": 1.0,
-		"b": 2.0,
-	}
-
-	data, err := bson.Marshal(f)
-	if err != nil {
-		t.Fatalf("unable to marshal feature collection: %v", err)
-	}
-
-	nf := &Feature{}
-	err = bson.Unmarshal(data, &nf)
-	if err != nil {
-		t.Fatalf("unable to unmarshal feature collection: %v", err)
-	}
-
-	if v := nf.ExtraMembers["a"]; v != 1.0 {
-		t.Errorf("incorrect extra member: %v != %v", v, 1.0)
-	}
-
-	if v := nf.ExtraMembers["b"]; v != 2.0 {
-		t.Errorf("incorrect extra member: %v != %v", v, 2.0)
-	}
-}
-
 // uncomment to test/benchmark custom json marshalling
 // func init() {
 // 	var c = jsoniter.Config{
@@ -556,56 +418,6 @@ func BenchmarkFeatureUnmarshalJSON(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		tile := map[string]*FeatureCollection{}
 		err = unmarshalJSON(data, &tile)
-		if err != nil {
-			b.Fatalf("could not unmarshal: %v", err)
-		}
-	}
-}
-
-func BenchmarkFeatureMarshalBSON(b *testing.B) {
-	data, err := os.ReadFile("../encoding/mvt/testdata/16-17896-24449.json")
-	if err != nil {
-		b.Fatalf("could not open file: %v", err)
-	}
-
-	tile := map[string]*FeatureCollection{}
-	err = json.Unmarshal(data, &tile)
-	if err != nil {
-		b.Fatalf("could not unmarshal: %v", err)
-	}
-
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, err := bson.Marshal(tile)
-		if err != nil {
-			b.Fatalf("marshal error: %v", err)
-		}
-	}
-}
-
-func BenchmarkFeatureUnmarshalBSON(b *testing.B) {
-	data, err := os.ReadFile("../encoding/mvt/testdata/16-17896-24449.json")
-	if err != nil {
-		b.Fatalf("could not open file: %v", err)
-	}
-
-	tile := map[string]*FeatureCollection{}
-	err = json.Unmarshal(data, &tile)
-	if err != nil {
-		b.Fatalf("could not unmarshal: %v", err)
-	}
-
-	bdata, err := bson.Marshal(tile)
-	if err != nil {
-		b.Fatalf("could not marshal: %v", err)
-	}
-
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		tile := map[string]*FeatureCollection{}
-		err = bson.Unmarshal(bdata, &tile)
 		if err != nil {
 			b.Fatalf("could not unmarshal: %v", err)
 		}

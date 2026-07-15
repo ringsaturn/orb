@@ -5,5 +5,4 @@ go 1.18
 require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/paulmach/protoscan v0.2.1
-	go.mongodb.org/mongo-driver/v2 v2.5.0
 )

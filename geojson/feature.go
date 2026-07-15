@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/paulmach/orb"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // A FeatureOf corresponds to GeoJSON feature object but allows for a generic type for the properties.
@@ -62,19 +61,6 @@ func (f FeatureOf[P]) MarshalJSON() ([]byte, error) {
 	return marshalJSON(f.newFeatureDoc(jProperties))
 }
 
-// MarshalBSON converts the feature object into the proper JSON.
-// It will handle the encoding of all the child geometries.
-// Alternately one can call json.Marshal(f) directly for the same result.
-// Items in the ExtraMembers map will be included in the base of the
-// feature object.
-func (f FeatureOf[P]) MarshalBSON() ([]byte, error) {
-	properties, err := f.bsonProperties()
-	if err != nil {
-		return nil, err
-	}
-	return bson.Marshal(f.newFeatureDoc(properties))
-}
-
 func (f FeatureOf[P]) jsonProperties() (json.RawMessage, error) {
 	jProperties, err := json.Marshal(f.Properties)
 	if err != nil {
@@ -88,19 +74,6 @@ func (f FeatureOf[P]) jsonProperties() (json.RawMessage, error) {
 	}
 
 	return jProperties, nil
-}
-
-func (f FeatureOf[P]) bsonProperties() (any, error) {
-	t, value, err := bson.MarshalValue(f.Properties)
-	if err != nil {
-		return nil, err
-	}
-
-	if t == bson.TypeEmbeddedDocument && bytes.Equal(value, []byte{5, 0, 0, 0, 0}) {
-		return nil, nil
-	}
-
-	return bson.RawValue{Type: t, Value: value}, nil
 }
 
 func (f FeatureOf[P]) newFeatureDoc(properties any) any {
@@ -219,70 +192,10 @@ func (f *FeatureOf[P]) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// UnmarshalBSON will unmarshal a BSON document created with bson.Marshal.
-func (f *FeatureOf[P]) UnmarshalBSON(data []byte) error {
-	tmp := make(map[string]bson.RawValue, 4)
-
-	err := bson.Unmarshal(data, &tmp)
-	if err != nil {
-		return err
-	}
-
-	*f = FeatureOf[P]{}
-	for key, value := range tmp {
-		switch key {
-		case "id":
-			err := value.Unmarshal(&f.ID)
-			if err != nil {
-				return err
-			}
-		case "type":
-			f.Type, _ = bson.RawValue(value).StringValueOK()
-		case "bbox":
-			err := value.Unmarshal(&f.BBox)
-			if err != nil {
-				return err
-			}
-		case "geometry":
-			g := &Geometry{}
-			err := value.Unmarshal(&g)
-			if err != nil {
-				return err
-			}
-
-			if g != nil {
-				f.Geometry = g.Geometry()
-			}
-		case "properties":
-			err := value.Unmarshal(&f.Properties)
-			if err != nil {
-				return err
-			}
-		default:
-			if f.ExtraMembers == nil {
-				f.ExtraMembers = Properties{}
-			}
-
-			var val any
-			err := value.Unmarshal(&val)
-			if err != nil {
-				return err
-			}
-			f.ExtraMembers[key] = val
-		}
-	}
-
-	if f.Type != "Feature" {
-		return fmt.Errorf("geojson: not a feature: type=%s", f.Type)
-	}
-
-	return nil
-}
-
 type featureDoc[P any] struct {
-	ID         any       `json:"id,omitempty" bson:"id"`
-	Type       string    `json:"type" bson:"type"`
-	BBox       BBox      `json:"bbox,omitempty" bson:"bbox,omitempty"`
-	Geometry   *Geometry `json:"geometry" bson:"geometry"`
-	Properties P         `json:"properties" bson:"properties"`
+	ID         any       `json:"id,omitempty"`
+	Type       string    `json:"type"`
+	BBox       BBox      `json:"bbox,omitempty"`
+	Geometry   *Geometry `json:"geometry"`
+	Properties P         `json:"properties"`
 }
