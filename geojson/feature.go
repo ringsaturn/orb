@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/paulmach/orb"
+	"github.com/ringsaturn/orb"
 )
 
 // A FeatureOf corresponds to GeoJSON feature object but allows for a generic type for the properties.

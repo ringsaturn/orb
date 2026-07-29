@@ -1,5 +1,13 @@
 # orb [![CI](https://github.com/paulmach/orb/workflows/CI/badge.svg)](https://github.com/paulmach/orb/actions?query=workflow%3ACI+event%3Apush) [![codecov](https://codecov.io/gh/paulmach/orb/branch/master/graph/badge.svg?token=NuuTjLVpKW)](https://codecov.io/gh/paulmach/orb) [![Go Report Card](https://goreportcard.com/badge/github.com/paulmach/orb)](https://goreportcard.com/report/github.com/paulmach/orb) [![Go Reference](https://pkg.go.dev/badge/github.com/paulmach/orb.svg)](https://pkg.go.dev/github.com/paulmach/orb)
 
+> **Note:** this is a fork of [`github.com/paulmach/orb`](https://github.com/paulmach/orb)
+> maintained for [tzf](https://github.com/ringsaturn/tzf), with the BSON/`mongo-driver`
+> support removed. It is published under its own module path,
+> `github.com/ringsaturn/orb`, so that it can be imported directly rather than
+> through a `replace` directive (a `replace` only applies to the main module, so
+> it never reaches downstream users). Import paths are otherwise identical:
+> `github.com/paulmach/orb/simplify` → `github.com/ringsaturn/orb/simplify`.
+
 Package `orb` defines a set of types for working with 2d geo and planar/projected geometric data in Golang.
 There are a set of sub-packages that use these types to do interesting things.
 They each provide their own README with extra info.

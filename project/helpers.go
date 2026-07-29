@@ -2,7 +2,7 @@
 // along with helpers to apply them to orb geometry types.
 package project
 
-import "github.com/paulmach/orb"
+import "github.com/ringsaturn/orb"
 
 // Geometry is a helper to project any geometry.
 func Geometry(g orb.Geometry, proj orb.Projection) orb.Geometry {

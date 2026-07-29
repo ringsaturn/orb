@@ -3,7 +3,7 @@ package wkbcommon
 import (
 	"testing"
 
-	"github.com/paulmach/orb"
+	"github.com/ringsaturn/orb"
 )
 
 var (
