@@ -3,7 +3,7 @@ package geojson
 import (
 	"errors"
 
-	"github.com/paulmach/orb"
+	"github.com/ringsaturn/orb"
 )
 
 // ErrInvalidGeometry will be returned if the json of the geometry is invalid.

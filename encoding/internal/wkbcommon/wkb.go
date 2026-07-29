@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"io"
 
-	"github.com/paulmach/orb"
+	"github.com/ringsaturn/orb"
 )
 
 // byteOrder represents little or big endian encoding.

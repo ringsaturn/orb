@@ -1,6 +1,6 @@
 package tilecover
 
-import "github.com/paulmach/orb/maptile"
+import "github.com/ringsaturn/orb/maptile"
 
 // MergeUp will merge up the tiles in a given set up to the
 // given min zoom. Tiles will be merged up only if all 4 siblings

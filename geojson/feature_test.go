@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/paulmach/orb"
+	"github.com/ringsaturn/orb"
 )
 
 func TestNewFeature(t *testing.T) {

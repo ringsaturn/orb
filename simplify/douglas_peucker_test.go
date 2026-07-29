@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/paulmach/orb"
+	"github.com/ringsaturn/orb"
 )
 
 func TestDouglasPeucker(t *testing.T) {

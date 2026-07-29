@@ -9,7 +9,7 @@ import "encoding/json"
 //
 //	import (
 //	  jsoniter "github.com/json-iterator/go"
-//	  "github.com/paulmach/orb/geojson"
+//	  "github.com/ringsaturn/orb/geojson"
 //	)
 //
 //	// in an init() or main(), etc.
@@ -34,7 +34,7 @@ var CustomJSONMarshaler interface {
 //
 //	import (
 //	  jsoniter "github.com/json-iterator/go"
-//	  "github.com/paulmach/orb/geojson"
+//	  "github.com/ringsaturn/orb/geojson"
 //	)
 //
 //	// in an init() or main(), etc.

@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/paulmach/orb"
-	"github.com/paulmach/orb/planar"
+	"github.com/ringsaturn/orb"
+	"github.com/ringsaturn/orb/planar"
 )
 
 func BenchmarkAdd(b *testing.B) {
